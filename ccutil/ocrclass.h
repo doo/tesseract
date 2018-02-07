@@ -109,7 +109,7 @@ typedef struct {                  /*single character */
  * user words found. If it returns true then operation is cancelled.
  **********************************************************************/
 typedef bool (*CANCEL_FUNC)(void* cancel_this, int words);
-typedef bool (*PROGRESS_FUNC)(int progress, int left, int right, int top,
+typedef bool (*PROGRESS_FUNC)(void* progress_this, int progress, int left, int right, int top,
                               int bottom);
 
 class ETEXT_DESC {             // output header
@@ -125,6 +125,7 @@ class ETEXT_DESC {             // output header
   CANCEL_FUNC cancel;               /// returns true to cancel
   PROGRESS_FUNC progress_callback;  /// called whenever progress increases
   void* cancel_this;                /// this or other data for cancel
+  void* progress_this;              /// this or other data for progress
   struct timeval end_time;          /// Time to stop. Expected to be set only
                                     /// by call to set_deadline_msecs().
   EANYCODE_CHAR text[1];            /// character data
@@ -137,7 +138,8 @@ class ETEXT_DESC {             // output header
         err_code(0),
         cancel(NULL),
         progress_callback(NULL),
-        cancel_this(NULL) {
+        cancel_this(NULL),
+        progress_this(NULL) {
     end_time.tv_sec = 0;
     end_time.tv_usec = 0;
   }
