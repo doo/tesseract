@@ -110,6 +110,7 @@ bool File::DeleteMatchingFiles(const char* pattern) {
 }
 #else
 bool File::DeleteMatchingFiles(const char* pattern) {
+#if !defined(__ANDROID_API__) || __ANDROID_API__ >= 28
   glob_t pglob;
   char **paths;
   bool all_deleted = true;
@@ -120,6 +121,9 @@ bool File::DeleteMatchingFiles(const char* pattern) {
     globfree(&pglob);
   }
   return all_deleted;
+#else
+  return false;
+#endif
 }
 #endif
 
