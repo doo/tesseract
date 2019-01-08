@@ -403,11 +403,14 @@ void LSTM::Forward(bool debug, const NetworkIO& input,
 //    ParallelContext(3, this, &input, scratch, output),
   };
 //
-//  for (int i = 0; i < NTHREADS; ++i) {
-//    fparallel(contexts, i);
-//  }
-  
+
+#if defined(HAS_GCD)
   dispatch_apply_f(NTHREADS, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), contexts, fparallel);
+#else
+  for (int i = 0; i < NTHREADS; ++i) {
+    fparallel(contexts, i);
+  }
+#endif
 
 #if DEBUG_DETAIL > 0
   tprintf("Source:%s\n", name_.string());
