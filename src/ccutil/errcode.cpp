@@ -24,6 +24,10 @@
 #include "tprintf.h"
 #include "errcode.h"
 
+#ifdef __ANDROID__
+#include <android/log.h>
+#endif
+
 const ERRCODE BADERRACTION = "Illegal error action";
 #define MAX_MSG       1024
 
@@ -40,6 +44,7 @@ TessErrorLogCode action,         // action to take
 const char *format, ...          // special message
 ) const {
   va_list args;                  // variable args
+
   char msg[MAX_MSG];
   char *msgptr = msg;
 
@@ -71,6 +76,10 @@ const char *format, ...          // special message
   // %s is needed here so msg is printed correctly!
   fprintf(stderr, "%s", msg);
 
+#ifdef __ANDROID__
+  __android_log_write(ANDROID_LOG_ERROR, "Tesseract", msg);
+#endif
+
   switch (action) {
     case DBG:
     case TESSLOG:
@@ -82,7 +91,7 @@ const char *format, ...          // special message
       // Create a deliberate segv as the stack trace is more useful that way.
       // This is done only in debug builds, because the error message
       // "segmentation fault" confuses most normal users.
-      *reinterpret_cast<int*>(0) = 0;
+      *reinterpret_cast<volatile int*>(0) = 0;
 #endif
       abort();
     default:

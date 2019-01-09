@@ -124,10 +124,11 @@ ImageData::ImageData() : page_number_(-1), vertical_text_(false) {
 }
 // Takes ownership of the pix and destroys it.
 ImageData::ImageData(bool vertical, Pix* pix)
-  : page_number_(0), vertical_text_(vertical) {
+  : page_number_(0), vertical_text_(vertical), image_data_(NULL) {
   SetPix(pix);
 }
 ImageData::~ImageData() {
+    SetPix(NULL);
 }
 
 // Builds and returns an ImageData from the basic data. Note that imagedata,
@@ -140,7 +141,8 @@ ImageData* ImageData::Build(const char* name, int page_number, const char* lang,
   image_data->page_number_ = page_number;
   image_data->language_ = lang;
   // Save the imagedata.
-  image_data->image_data_.resize_no_init(imagedatasize);
+      ASSERT_HOST(false);
+//  image_data->image_data_.resize_no_init(imagedatasize);
   memcpy(&image_data->image_data_[0], imagedata, imagedatasize);
   if (!image_data->AddBoxes(box_text)) {
     if (truth_text == nullptr || truth_text[0] == '\0') {
@@ -166,7 +168,8 @@ ImageData* ImageData::Build(const char* name, int page_number, const char* lang,
 bool ImageData::Serialize(TFile* fp) const {
   if (!imagefilename_.Serialize(fp)) return false;
   if (!fp->Serialize(&page_number_)) return false;
-  if (!image_data_.Serialize(fp)) return false;
+      ASSERT_HOST(false);
+//  if (!image_data_.Serialize(fp)) return false;
   if (!language_.Serialize(fp)) return false;
   if (!transcription_.Serialize(fp)) return false;
   // WARNING: Will not work across different endian machines.
@@ -181,7 +184,8 @@ bool ImageData::Serialize(TFile* fp) const {
 bool ImageData::DeSerialize(TFile* fp) {
   if (!imagefilename_.DeSerialize(fp)) return false;
   if (!fp->DeSerialize(&page_number_)) return false;
-  if (!image_data_.DeSerialize(fp)) return false;
+      ASSERT_HOST(false);
+//  if (!image_data_.DeSerialize(fp)) return false;
   if (!language_.DeSerialize(fp)) return false;
   if (!transcription_.DeSerialize(fp)) return false;
   // WARNING: Will not work across different endian machines.
@@ -209,12 +213,16 @@ bool ImageData::SkipDeSerialize(TFile* fp) {
 
 // Saves the given Pix as a PNG-encoded string and destroys it.
 void ImageData::SetPix(Pix* pix) {
-  SetPixInternal(pix, &image_data_);
+    if (image_data_) {
+        pixDestroy(&image_data_);
+    }
+  image_data_ = pix;
+//  SetPixInternal(pix, &image_data_);
 }
 
 // Returns the Pix image for *this. Must be pixDestroyed after use.
 Pix* ImageData::GetPix() const {
-  return GetPixInternal(image_data_);
+  return image_data_ ? pixClone(image_data_) : NULL;
 }
 
 // Gets anything and everything with a non-nullptr pointer, prescaled to a
@@ -268,7 +276,7 @@ Pix* ImageData::PreScale(int target_height, int max_height, float* scale_factor,
 }
 
 int ImageData::MemoryUsed() const {
-  return image_data_.size();
+  return image_data_->wpl * image_data_->h;
 }
 
 // Draws the data in a new window.
@@ -322,28 +330,28 @@ void ImageData::AddBoxes(const GenericVector<TBOX>& boxes,
   }
 }
 
-// Saves the given Pix as a PNG-encoded string and destroys it.
-void ImageData::SetPixInternal(Pix* pix, GenericVector<char>* image_data) {
-  l_uint8* data;
-  size_t size;
-  pixWriteMem(&data, &size, pix, IFF_PNG);
-  pixDestroy(&pix);
-  image_data->resize_no_init(size);
-  memcpy(&(*image_data)[0], data, size);
-  lept_free(data);
-}
-
-// Returns the Pix image for the image_data. Must be pixDestroyed after use.
-Pix* ImageData::GetPixInternal(const GenericVector<char>& image_data) {
-  Pix* pix = nullptr;
-  if (!image_data.empty()) {
-    // Convert the array to an image.
-    const unsigned char* u_data =
-        reinterpret_cast<const unsigned char*>(&image_data[0]);
-    pix = pixReadMem(u_data, image_data.size());
-  }
-  return pix;
-}
+//// Saves the given Pix as a PNG-encoded string and destroys it.
+//void ImageData::SetPixInternal(Pix* pix, GenericVector<char>* image_data) {
+//  l_uint8* data;
+//  size_t size;
+//  pixWriteMem(&data, &size, pix, IFF_BMP);
+//  pixDestroy(&pix);
+//  image_data->resize_no_init(size);
+//  memcpy(&(*image_data)[0], data, size);
+//  lept_free(data);
+//}
+//
+//// Returns the Pix image for the image_data. Must be pixDestroyed after use.
+//Pix* ImageData::GetPixInternal(const GenericVector<char>& image_data) {
+//  Pix* pix = nullptr;
+//  if (!image_data.empty()) {
+//    // Convert the array to an image.
+//    const unsigned char* u_data =
+//        reinterpret_cast<const unsigned char*>(&image_data[0]);
+//    pix = pixReadMem(u_data, image_data.size());
+//  }
+//  return pix;
+//}
 
 // Parses the text string as a box file and adds any discovered boxes that
 // match the page number. Returns false on error.

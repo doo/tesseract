@@ -135,9 +135,9 @@ class ImageData {
   void set_page_number(int num) {
     page_number_ = num;
   }
-  const GenericVector<char>& image_data() const {
-    return image_data_;
-  }
+//  const GenericVector<char>& image_data() const {
+//    return image_data_;
+//  }
   const STRING& language() const {
     return language_;
   }
@@ -182,10 +182,10 @@ class ImageData {
                 const GenericVector<int>& box_pages);
 
  private:
-  // Saves the given Pix as a PNG-encoded string and destroys it.
-  static void SetPixInternal(Pix* pix, GenericVector<char>* image_data);
-  // Returns the Pix image for the image_data. Must be pixDestroyed after use.
-  static Pix* GetPixInternal(const GenericVector<char>& image_data);
+//  // Saves the given Pix as a PNG-encoded string and destroys it.
+//  static void SetPixInternal(Pix* pix, GenericVector<char>* image_data);
+//  // Returns the Pix image for the image_data. Must be pixDestroyed after use.
+//  static Pix* GetPixInternal(const GenericVector<char>& image_data);
   // Parses the text string as a box file and adds any discovered boxes that
   // match the page number. Returns false on error.
   bool AddBoxes(const char* box_text);
@@ -193,7 +193,8 @@ class ImageData {
  private:
   STRING imagefilename_;             // File to read image from.
   int32_t page_number_;                // Page number if multi-page tif or -1.
-  GenericVector<char> image_data_;   // PNG file data.
+//  GenericVector<char> image_data_;   // PNG file data.
+    Pix* image_data_;
   STRING language_;                  // Language code for image.
   STRING transcription_;             // UTF-8 ground truth of image.
   GenericVector<TBOX> boxes_;        // If non-empty boxes of the image.
