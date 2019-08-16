@@ -330,7 +330,7 @@ void LSTM::Forward(bool debug, const NetworkIO& input,
     
     for (int t = ctx->src_index.t(), tlast = t;
          t >= tlast && t != ctx->last_t;
-         ctx->src_index.Increment(), t = ctx->src_index.t()) {
+         t = ctx->src_index.t()) {
       tlast = t;
       // Setup the padded input in source.
       self->source_.CopyTimeStepGeneral(t, 0, self->ni_, *ctx->input, t, 0);
@@ -392,6 +392,9 @@ void LSTM::Forward(bool debug, const NetworkIO& input,
       if (ctx->src_index.IsLast(FD_WIDTH)) {
         ZeroVector<double>(self->ns_, ctx->curr_state);
         ZeroVector<double>(self->ns_, ctx->curr_output);
+      }
+      if (!ctx->src_index.Increment()) {
+        break;
       }
     }
   };
