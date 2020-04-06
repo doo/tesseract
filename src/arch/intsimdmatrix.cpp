@@ -72,6 +72,8 @@ void IntSimdMatrix::Init(const GENERIC_2D_ARRAY<int8_t>& w,
   }
 }
 
+#include "correlationsum.inl"
+
 // Computes matrix.vector v = Wu.
 // u is of size W.dim2() - 1 and the output v is of size W.dim1().
 // u is imagined to have an extra element at the end with value 1, to
@@ -85,7 +87,8 @@ void IntSimdMatrix::MatrixDotVector(const GENERIC_2D_ARRAY<int8_t>& w,
   for (int i = 0; i < num_out; ++i) {
     const int8_t* wi = w[i];
     int total = 0;
-    for (int j = 0; j < num_in; ++j) total += wi[j] * u[j];
+//    for (int j = 0; j < num_in; ++j) total += wi[j] * u[j];
+    CorrelationSum(wi, u, num_in, &total);
     // Add in the bias and correct for integer values.
     v[i] = (static_cast<double>(total) / INT8_MAX + wi[num_in]) * scales[i];
   }
