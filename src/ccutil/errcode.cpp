@@ -22,6 +22,10 @@
 #include <cstring>
 #include "errcode.h"
 
+#ifdef __ANDROID__
+#include <android/log.h>
+#endif
+
 constexpr ERRCODE BADERRACTION("Illegal error action");
 #define MAX_MSG       1024
 
@@ -68,6 +72,10 @@ const char *format, ...          // special message
 
   // %s is needed here so msg is printed correctly!
   fprintf(stderr, "%s", msg);
+
+#ifdef __ANDROID__
+  __android_log_write(ANDROID_LOG_ERROR, "Tesseract", msg);
+#endif
 
   switch (action) {
     case DBG:
