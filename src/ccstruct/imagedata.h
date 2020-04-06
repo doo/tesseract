@@ -135,9 +135,6 @@ class ImageData {
   void set_page_number(int num) {
     page_number_ = num;
   }
-  const GenericVector<char>& image_data() const {
-    return image_data_;
-  }
   const STRING& language() const {
     return language_;
   }
@@ -156,10 +153,6 @@ class ImageData {
   const STRING& box_text(int index) const {
     return box_texts_[index];
   }
-  // Saves the given Pix as a PNG-encoded string and destroys it.
-  // In case of missing PNG support in Leptonica use PNM format,
-  // which requires more memory.
-  void SetPix(Pix* pix);
   // Returns the Pix image for *this. Must be pixDestroyed after use.
   Pix* GetPix() const;
   // Gets anything and everything with a non-nullptr pointer, prescaled to a
@@ -184,20 +177,20 @@ class ImageData {
                 const GenericVector<int>& box_pages);
 
  private:
-  // Saves the given Pix as a PNG-encoded string and destroys it.
-  // In case of missing PNG support in Leptonica use PNM format,
-  // which requires more memory.
-  static void SetPixInternal(Pix* pix, GenericVector<char>* image_data);
-  // Returns the Pix image for the image_data. Must be pixDestroyed after use.
-  static Pix* GetPixInternal(const GenericVector<char>& image_data);
   // Parses the text string as a box file and adds any discovered boxes that
   // match the page number. Returns false on error.
   bool AddBoxes(const char* box_text);
 
- private:
+  // Saves the given Pix as a PNG-encoded string and destroys it.
+  // In case of missing PNG support in Leptonica use PNM format,
+  // which requires more memory.
+  // SD: keep the pix as-is instead of going back and forth to a binary format
+  void SetPix(Pix* pix);
+
+private:
   STRING imagefilename_;             // File to read image from.
   int32_t page_number_;              // Page number if multi-page tif or -1.
-  GenericVector<char> image_data_;   // PNG/PNM file data.
+  Pix* image_data_;                  // SD: Image data as-is
   STRING language_;                  // Language code for image.
   STRING transcription_;             // UTF-8 ground truth of image.
   GenericVector<TBOX> boxes_;        // If non-empty boxes of the image.

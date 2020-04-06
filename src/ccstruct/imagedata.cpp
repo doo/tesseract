@@ -124,10 +124,11 @@ ImageData::ImageData() : page_number_(-1), vertical_text_(false) {
 }
 // Takes ownership of the pix and destroys it.
 ImageData::ImageData(bool vertical, Pix* pix)
-  : page_number_(0), vertical_text_(vertical) {
+  : page_number_(0), vertical_text_(vertical), image_data_(NULL) {
   SetPix(pix);
 }
 ImageData::~ImageData() {
+  SetPix(NULL);
 }
 
 // Builds and returns an ImageData from the basic data. Note that imagedata,
@@ -135,13 +136,14 @@ ImageData::~ImageData() {
 ImageData* ImageData::Build(const char* name, int page_number, const char* lang,
                             const char* imagedata, int imagedatasize,
                             const char* truth_text, const char* box_text) {
+  ASSERT_HOST(!"Not supported");
   auto* image_data = new ImageData();
   image_data->imagefilename_ = name;
   image_data->page_number_ = page_number;
   image_data->language_ = lang;
   // Save the imagedata.
-  image_data->image_data_.resize_no_init(imagedatasize);
-  memcpy(&image_data->image_data_[0], imagedata, imagedatasize);
+//  image_data->image_data_.resize_no_init(imagedatasize);
+//  memcpy(&image_data->image_data_[0], imagedata, imagedatasize);
   if (!image_data->AddBoxes(box_text)) {
     if (truth_text == nullptr || truth_text[0] == '\0') {
       tprintf("Error: No text corresponding to page %d from image %s!\n",
@@ -164,9 +166,10 @@ ImageData* ImageData::Build(const char* name, int page_number, const char* lang,
 
 // Writes to the given file. Returns false in case of error.
 bool ImageData::Serialize(TFile* fp) const {
+  ASSERT_HOST(!"Not supported");
   if (!imagefilename_.Serialize(fp)) return false;
   if (!fp->Serialize(&page_number_)) return false;
-  if (!image_data_.Serialize(fp)) return false;
+//  if (!image_data_.Serialize(fp)) return false;
   if (!language_.Serialize(fp)) return false;
   if (!transcription_.Serialize(fp)) return false;
   // WARNING: Will not work across different endian machines.
@@ -179,9 +182,10 @@ bool ImageData::Serialize(TFile* fp) const {
 // Reads from the given file. Returns false in case of error.
 // If swap is true, assumes a big/little-endian swap is needed.
 bool ImageData::DeSerialize(TFile* fp) {
+  ASSERT_HOST(!"Not supported");
   if (!imagefilename_.DeSerialize(fp)) return false;
   if (!fp->DeSerialize(&page_number_)) return false;
-  if (!image_data_.DeSerialize(fp)) return false;
+//  if (!image_data_.DeSerialize(fp)) return false;
   if (!language_.DeSerialize(fp)) return false;
   if (!transcription_.DeSerialize(fp)) return false;
   // WARNING: Will not work across different endian machines.
@@ -210,13 +214,22 @@ bool ImageData::SkipDeSerialize(TFile* fp) {
 // Saves the given Pix as a PNG-encoded string and destroys it.
 // In case of missing PNG support in Leptonica use PNM format,
 // which requires more memory.
+
+// SD: keep the pix as-is instead of going back and forth to a binary format
 void ImageData::SetPix(Pix* pix) {
-  SetPixInternal(pix, &image_data_);
+  if (image_data_) {
+    pixDestroy(&image_data_);
+  }
+  image_data_ = pix;
 }
 
 // Returns the Pix image for *this. Must be pixDestroyed after use.
 Pix* ImageData::GetPix() const {
-  return GetPixInternal(image_data_);
+  if (!image_data_) {
+    return NULL;
+  }
+  pixChangeRefcount(image_data_, 1);
+  return image_data_;
 }
 
 // Gets anything and everything with a non-nullptr pointer, prescaled to a
@@ -270,7 +283,7 @@ Pix* ImageData::PreScale(int target_height, int max_height, float* scale_factor,
 }
 
 int ImageData::MemoryUsed() const {
-  return image_data_.size();
+  return image_data_->wpl * image_data_->h;
 }
 
 // Draws the data in a new window.
@@ -322,35 +335,6 @@ void ImageData::AddBoxes(const GenericVector<TBOX>& boxes,
     boxes_.push_back(boxes[i]);
     box_texts_.push_back(texts[i]);
   }
-}
-
-// Saves the given Pix as a PNG-encoded string and destroys it.
-// In case of missing PNG support in Leptonica use PNM format,
-// which requires more memory.
-void ImageData::SetPixInternal(Pix* pix, GenericVector<char>* image_data) {
-  l_uint8* data;
-  size_t size;
-  l_int32 ret;
-  ret = pixWriteMem(&data, &size, pix, IFF_PNG);
-  if (ret) {
-    ret = pixWriteMem(&data, &size, pix, IFF_PNM);
-  }
-  pixDestroy(&pix);
-  image_data->resize_no_init(size);
-  memcpy(&(*image_data)[0], data, size);
-  lept_free(data);
-}
-
-// Returns the Pix image for the image_data. Must be pixDestroyed after use.
-Pix* ImageData::GetPixInternal(const GenericVector<char>& image_data) {
-  Pix* pix = nullptr;
-  if (!image_data.empty()) {
-    // Convert the array to an image.
-    const auto* u_data =
-        reinterpret_cast<const unsigned char*>(&image_data[0]);
-    pix = pixReadMem(u_data, image_data.size());
-  }
-  return pix;
 }
 
 // Parses the text string as a box file and adds any discovered boxes that
