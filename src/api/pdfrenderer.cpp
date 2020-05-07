@@ -623,8 +623,13 @@ bool TessPDFRenderer::BeginDocumentHandler() {
   stream << datadir_.c_str() << "/pdf.dat";
   FILE *fp = fopen(stream.str().c_str(), "rb");
   if (!fp) {
-    tprintf("Cannot open file \"%s\"!\n", stream.str().c_str());
-    return false;
+    stream.str("");
+    stream << datadir_.c_str() << "/pdf.ttf";
+    fp = fopen(stream.str().c_str(), "rb");
+    if (!fp) {
+      tprintf("Cannot open file pdf.ttf or pdf.dat in directory \"%s\"!\n", datadir_.c_str());
+      return false;
+    }
   }
   fseek(fp, 0, SEEK_END);
   long int size = ftell(fp);
