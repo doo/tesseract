@@ -620,7 +620,7 @@ bool TessPDFRenderer::BeginDocumentHandler() {
   AppendPDFObject(stream.str().c_str());
 
   stream.str("");
-  stream << datadir_.c_str() << "/pdf.ttf";
+  stream << datadir_.c_str() << "/pdf.dat";
   FILE *fp = fopen(stream.str().c_str(), "rb");
   if (!fp) {
     tprintf("Cannot open file \"%s\"!\n", stream.str().c_str());
