@@ -145,6 +145,9 @@ class TESS_API TessResultRenderer {
   // This method will grow the output buffer if needed.
   void AppendData(const char* s, int len);
 
+  bool writeToBuffer_;
+  std::vector<char> outputBuffer_;
+
  private:
   const char* file_extension_;  // standard extension for generated output
   STRING title_;                // title of document being renderered
@@ -153,8 +156,6 @@ class TESS_API TessResultRenderer {
   FILE* fout_;                // output file pointer
   TessResultRenderer* next_;  // Can link multiple renderers together
   bool happy_;                // I get grumpy when the disk fills up, etc.
-  bool writeToBuffer_;
-  std::vector<char> outputBuffer_;
 };
 
 /**
@@ -227,9 +228,6 @@ class TESS_API TessPDFRenderer : public TessResultRenderer {
 
  TessPDFRenderer(const char* datadir, bool textonly = false);
     
-    
- std::vector<char> getOutputBuffer();
-    
  protected:
   bool BeginDocumentHandler() override;
   bool AddImageHandler(TessBaseAPI* api) override;
@@ -245,8 +243,6 @@ class TESS_API TessPDFRenderer : public TessResultRenderer {
   GenericVector<long int> offsets_;  // offset of every PDF object in bytes
   GenericVector<long int> pages_;    // object number for every /Page object
   std::string datadir_;              // where to find the custom font
-  std::vector<char> outputBuffer_;
-  bool writeToBuffer_;
   bool textonly_;                    // skip images if set
   // Bookkeeping only. DIY = Do It Yourself.
   void AppendPDFObjectDIY(size_t objectsize);
