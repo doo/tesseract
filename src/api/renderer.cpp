@@ -116,9 +116,7 @@ void TessResultRenderer::AppendString(const char* s) {
 void TessResultRenderer::AppendData(const char* s, int len) {
     if (writeToBuffer_) {
         outputBuffer_.reserve(outputBuffer_.size() + len);
-        for (int i = 0; i < len; i++) {
-            outputBuffer_.push_back(s[i]);
-        }
+        outputBuffer_.insert(outputBuffer_.end(), s, s + len);
     } else {
         if (!tesseract::Serialize(fout_, s, len)) happy_ = false;
     }
