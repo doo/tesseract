@@ -92,6 +92,10 @@ class TESS_API TessResultRenderer {
   bool happy() {
     return happy_;
   }
+    
+  std::vector<char> outputBuffer() {
+    return outputBuffer_;
+  }
 
   /**
    * Returns the index of the last image given to AddImage
@@ -118,6 +122,8 @@ class TESS_API TessResultRenderer {
    * will produce .hocr files.
    */
   TessResultRenderer(const char* outputbase, const char* extension);
+  
+  TessResultRenderer(const char* extension);
 
   // Hook for specialized handling in BeginDocument()
   virtual bool BeginDocumentHandler();
@@ -147,6 +153,8 @@ class TESS_API TessResultRenderer {
   FILE* fout_;                // output file pointer
   TessResultRenderer* next_;  // Can link multiple renderers together
   bool happy_;                // I get grumpy when the disk fills up, etc.
+  bool writeToBuffer_;
+  std::vector<char> outputBuffer_;
 };
 
 /**
@@ -217,6 +225,11 @@ class TESS_API TessPDFRenderer : public TessResultRenderer {
   TessPDFRenderer(const char* outputbase, const char* datadir,
                   bool textonly = false);
 
+ TessPDFRenderer(const char* datadir, bool textonly = false);
+    
+    
+ std::vector<char> getOutputBuffer();
+    
  protected:
   bool BeginDocumentHandler() override;
   bool AddImageHandler(TessBaseAPI* api) override;
@@ -232,6 +245,8 @@ class TESS_API TessPDFRenderer : public TessResultRenderer {
   GenericVector<long int> offsets_;  // offset of every PDF object in bytes
   GenericVector<long int> pages_;    // object number for every /Page object
   std::string datadir_;              // where to find the custom font
+  std::vector<char> outputBuffer_;
+  bool writeToBuffer_;
   bool textonly_;                    // skip images if set
   // Bookkeeping only. DIY = Do It Yourself.
   void AppendPDFObjectDIY(size_t objectsize);

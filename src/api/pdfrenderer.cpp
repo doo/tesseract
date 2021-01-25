@@ -178,11 +178,20 @@ static const int kMaxBytesPerCodepoint = 20;
  **********************************************************************/
 TessPDFRenderer::TessPDFRenderer(const char *outputbase, const char *datadir,
                                  bool textonly)
-    : TessResultRenderer(outputbase, "pdf"),
-      datadir_(datadir) {
-  obj_  = 0;
-  textonly_ = textonly;
-  offsets_.push_back(0);
+    : TessResultRenderer(outputbase, "pdf"), datadir_(datadir) {
+        obj_  = 0;
+        textonly_ = textonly;
+        offsets_.push_back(0);
+        writeToBuffer_ = false;
+}
+
+TessPDFRenderer::TessPDFRenderer(const char* datadir, bool textonly)
+: TessResultRenderer("pdf"), datadir_(datadir) {
+    obj_  = 0;
+    textonly_ = textonly;
+    offsets_.push_back(0);
+    writeToBuffer_ = true;
+    outputBuffer_ = std::vector<char>();
 }
 
 void TessPDFRenderer::AppendPDFObjectDIY(size_t objectsize) {
