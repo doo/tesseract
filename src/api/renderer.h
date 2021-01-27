@@ -92,6 +92,10 @@ class TESS_API TessResultRenderer {
   bool happy() {
     return happy_;
   }
+    
+  std::vector<char> outputBuffer() {
+    return outputBuffer_;
+  }
 
   /**
    * Returns the index of the last image given to AddImage
@@ -118,6 +122,8 @@ class TESS_API TessResultRenderer {
    * will produce .hocr files.
    */
   TessResultRenderer(const char* outputbase, const char* extension);
+  
+  TessResultRenderer(const char* extension);
 
   // Hook for specialized handling in BeginDocument()
   virtual bool BeginDocumentHandler();
@@ -138,6 +144,9 @@ class TESS_API TessResultRenderer {
   // '\0' terminated (and can contain '\0' within it).
   // This method will grow the output buffer if needed.
   void AppendData(const char* s, int len);
+
+  bool writeToBuffer_;
+  std::vector<char> outputBuffer_;
 
  private:
   const char* file_extension_;  // standard extension for generated output
@@ -217,6 +226,8 @@ class TESS_API TessPDFRenderer : public TessResultRenderer {
   TessPDFRenderer(const char* outputbase, const char* datadir,
                   bool textonly = false);
 
+ TessPDFRenderer(const char* datadir, bool textonly = false);
+    
  protected:
   bool BeginDocumentHandler() override;
   bool AddImageHandler(TessBaseAPI* api) override;

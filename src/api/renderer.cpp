@@ -36,7 +36,8 @@ TessResultRenderer::TessResultRenderer(const char *outputbase,
       title_(""), imagenum_(-1),
       fout_(stdout),
       next_(nullptr),
-      happy_(true) {
+      happy_(true),
+      writeToBuffer_(false) {
   if (strcmp(outputbase, "-") && strcmp(outputbase, "stdout")) {
     STRING outfile = STRING(outputbase) + STRING(".") + STRING(file_extension_);
     fout_ = fopen(outfile.string(), "wb");
@@ -45,6 +46,15 @@ TessResultRenderer::TessResultRenderer(const char *outputbase,
     }
   }
 }
+
+TessResultRenderer::TessResultRenderer(const char* extension)
+: file_extension_(extension),
+  title_(""), imagenum_(-1),
+  fout_(stdout),
+  next_(nullptr),
+  happy_(true),
+  writeToBuffer_(true)
+{ }
 
 TessResultRenderer::~TessResultRenderer() {
   if (fout_ != nullptr) {
@@ -104,7 +114,12 @@ void TessResultRenderer::AppendString(const char* s) {
 }
 
 void TessResultRenderer::AppendData(const char* s, int len) {
-  if (!tesseract::Serialize(fout_, s, len)) happy_ = false;
+    if (writeToBuffer_) {
+        outputBuffer_.reserve(outputBuffer_.size() + len);
+        outputBuffer_.insert(outputBuffer_.end(), s, s + len);
+    } else {
+        if (!tesseract::Serialize(fout_, s, len)) happy_ = false;
+    }
 }
 
 bool TessResultRenderer::BeginDocumentHandler() {
