@@ -1258,6 +1258,70 @@ bool TessBaseAPI::ProcessPage(Pix* pix, int page_index, const char* filename,
   return !failed;
 }
 
+bool TessBaseAPI::ProcessPixPage(Pix* pixToProcess, int page_index, Pix* pixToWrite,
+                              const char* retry_config, int timeout_millisec,
+                              TessResultRenderer* renderer) {
+  SetInputName("");
+  SetImage(pixToProcess);
+  bool failed = false;
+
+  if (tesseract_->tessedit_pageseg_mode == PSM_AUTO_ONLY) {
+    // Disabled character recognition
+    PageIterator* it = AnalyseLayout();
+
+    if (it == nullptr) {
+      failed = true;
+    } else {
+      delete it;
+    }
+  } else if (tesseract_->tessedit_pageseg_mode == PSM_OSD_ONLY) {
+    failed = FindLines() != 0;
+  } else if (timeout_millisec > 0) {
+    // Running with a timeout.
+    ETEXT_DESC monitor;
+    monitor.cancel = nullptr;
+    monitor.cancel_this = nullptr;
+    monitor.set_deadline_msecs(timeout_millisec);
+
+    // Now run the main recognition.
+    failed = Recognize(&monitor) < 0;
+  } else {
+    // Normal layout and character recognition with no timeout.
+    failed = Recognize(nullptr) < 0;
+  }
+
+  if (tesseract_->tessedit_write_images) {
+#ifndef ANDROID_BUILD
+  Pix* page_pix = GetThresholdedImage();
+  pixWrite("tessinput.tif", page_pix, IFF_TIFF_G4);
+#endif  // ANDROID_BUILD
+  }
+
+  if (failed && retry_config != nullptr && retry_config[0] != '\0') {
+    // Save current config variables before switching modes.
+    FILE* fp = fopen(kOldVarsFile, "wb");
+    if (fp == nullptr) {
+      tprintf("Error, failed to open file \"%s\"\n", kOldVarsFile);
+    } else {
+      PrintVariables(fp);
+      fclose(fp);
+    }
+    // Switch to alternate mode for retry.
+    ReadConfigFile(retry_config);
+    SetImage(pixToProcess);
+    Recognize(nullptr);
+    // Restore saved config variables.
+    ReadConfigFile(kOldVarsFile);
+  }
+
+  if (renderer && !failed) {
+    SetInputImage(pixToWrite);
+    failed = !renderer->AddImage(this);
+  }
+
+  return !failed;
+}
+
 /**
  * Get a left-to-right iterator to the results of LayoutAnalysis and/or
  * Recognize. The returned iterator must be deleted after use.

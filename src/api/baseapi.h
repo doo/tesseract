@@ -528,6 +528,19 @@ class TESS_API TessBaseAPI {
   /**
    * Turn a single image into symbolic text.
    *
+   * The pixToProcess is the image processed. pixToWrite and page_index are
+   * metadata used by side-effect processes, such as reading a box
+   * file or formatting as hOCR.
+   *
+   * See ProcessPages for desciptions of other parameters.
+   */
+  bool ProcessPixPage(Pix* pixToProcess, int page_index, Pix* pixToWrite,
+                   const char* retry_config, int timeout_millisec,
+                   TessResultRenderer* renderer);
+
+  /**
+   * Turn a single image into symbolic text.
+   *
    * The pix is the image processed. filename and page_index are
    * metadata used by side-effect processes, such as reading a box
    * file or formatting as hOCR.
