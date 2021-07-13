@@ -528,15 +528,17 @@ class TESS_API TessBaseAPI {
   /**
    * Turn a single image into symbolic text.
    *
-   * The pix is the image processed. filename and page_index are
+   * The pix is the image processed. pixToWrite, filename and page_index are
    * metadata used by side-effect processes, such as reading a box
    * file or formatting as hOCR.
+   *
+   * pixToWrite is an image that will be used for PDF rendering. If pixToWrite is null - filename will be used by side-effect processes.
    *
    * See ProcessPages for desciptions of other parameters.
    */
   bool ProcessPage(Pix* pix, int page_index, const char* filename,
                    const char* retry_config, int timeout_millisec,
-                   TessResultRenderer* renderer);
+                   TessResultRenderer* renderer, Pix* pixToWrite = nullptr);
 
   /**
    * Get a reading-order iterator to the results of LayoutAnalysis and/or

@@ -1197,9 +1197,10 @@ bool TessBaseAPI::ProcessPagesInternal(const char* filename,
 
 bool TessBaseAPI::ProcessPage(Pix* pix, int page_index, const char* filename,
                               const char* retry_config, int timeout_millisec,
-                              TessResultRenderer* renderer) {
-  SetInputName(filename);
+                              TessResultRenderer* renderer, Pix* pixToWrite) {
+  SetInputName(pixToWrite == nullptr ? filename : "");
   SetImage(pix);
+
   bool failed = false;
 
   if (tesseract_->tessedit_pageseg_mode == PSM_AUTO_ONLY) {
@@ -1252,6 +1253,9 @@ bool TessBaseAPI::ProcessPage(Pix* pix, int page_index, const char* filename,
   }
 
   if (renderer && !failed) {
+    if (pixToWrite != nullptr) {
+      SetInputImage(pixToWrite);
+    }
     failed = !renderer->AddImage(this);
   }
 
